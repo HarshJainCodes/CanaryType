@@ -120,7 +120,8 @@
                 document.querySelector('textarea').blur();
             },
             getStringToTypeFromBackend: function(){
-                fetch("https://localhost:7093/api/Student/RandomWords", {
+                // use locahost for if backend is not hosted
+                fetch("https://canarytype.azurewebsites.net/api/Student/RandomWords", {
                     method: 'GET'
                 }).then(response => 
                     response.json()
