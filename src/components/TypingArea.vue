@@ -135,7 +135,7 @@
             },
             saveResult : function () {
                 // first check if that name already exists in the database or not
-                fetch('https://localhost:7093/api/Student/CanaryNames', {
+                fetch('https://canarytype.azurewebsites.net/api/Student/CanaryNames', {
                     method: 'GET'
                 }).then(
                     response => response.json()
@@ -145,7 +145,7 @@
                             let form = new FormData()
                             form.append("Name", this.typerName)
                             form.append("BestTypingSpeed", this.typingSpeed)
-                            fetch('https://localhost:7093/api/Student/UpdateExistingCanary', {
+                            fetch('https://canarytype.azurewebsites.net/api/Student/UpdateExistingCanary', {
                                 method: 'PUT',
                                 body: form
                             }).then(() => {
@@ -161,7 +161,7 @@
                     let form = new FormData()
                     form.append("Name", this.typerName)
                     form.append("BestTypingSpeed", this.typingSpeed)
-                    fetch('https://localhost:7093/api/Student/CreateNewTyper', {
+                    fetch('https://canarytype.azurewebsites.net/api/Student/CreateNewTyper', {
                         method: 'POST',
                         body: form
                     }).then(() => {
@@ -188,7 +188,7 @@
             ,
             fetchResultFromDB: function() {
                 // fetch data from the backend
-                fetch('https://localhost:7093/api/Student/Leaderboard', {
+                fetch('https://canarytype.azurewebsites.net/api/Student/Leaderboard', {
                     method: 'GET'
                 }).then(response => response.json())
                 .then(backendData => {
