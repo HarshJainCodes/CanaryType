@@ -22,8 +22,8 @@
             <div class="leftLayout">
                 <label>Enter your name</label>
                 <input class="typerNameInput" v-model="typerName">
-                <div>
-                    <button class="saveResult" @click="saveResult">
+                <div style="display: flex; justify-content: center;">
+                    <button class="button-45" @click="saveResult" >
                         Save your result
                     </button>
                 </div>
@@ -370,4 +370,64 @@ tbody tr:hover {
     background-color: #a2d9ce;
 }
 
+/* <!-- HTML !-->
+<button class="button-45" role="button">Button 45</button> */
+
+/* CSS */
+.button-45 {
+  /* align-items: center; */
+  background-color: #87fba4;
+  /* background-position: 0 0; */
+  padding: 10px;
+  margin-top: 60px;
+  border: 1px solid #004d20;
+  border-radius: 11px;
+  box-sizing: border-box;
+  color: #013729;
+  cursor: pointer;
+  display: flex;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 33.4929px;
+  list-style: outside url(https://www.smashingmagazine.com/images/bullet.svg) none;
+  padding: 2px 12px;
+  text-align: left;
+  text-decoration: none;
+  text-shadow: none;
+  text-underline-offset: 1px;
+  transition: border .2s ease-in-out,box-shadow .2s ease-in-out;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  word-break: break-word;
+}
+
+.button-45:active,
+.button-45:hover,
+.button-45:focus {
+  outline: 0;
+}
+
+
+.button-45:active {
+  background-color: #8ffaaa;
+  box-shadow: rgba(0, 0, 0, 0.12) 0 1px 3px 0 inset;
+  color: #FFFFFF;
+}
+
+.button-45:hover {
+  background-color: #8ffaaa;
+  border-color: #02af42;
+}
+
+.button-45:active:hover,
+.button-45:focus:hover,
+.button-45:focus {
+  background-color: #003816;
+  box-shadow: rgba(0, 0, 0, 0.12) 0 1px 3px 0 inset;
+  color: #FFFFFF;
+}
+
 </style>
+
