@@ -176,7 +176,7 @@
                 })
 
                 for (let i = 0; i < canaryNames.length; i++){
-                    if (this.typerName === data[i]){
+                    if (this.typerName === canaryNames[i]){
                         let form = new FormData()
                         form.append("Name", this.typerName)
                         form.append("BestTypingSpeed", this.typingSpeed)
