@@ -133,42 +133,72 @@
                     this.testText += data[data.length - 1]
                 })
             },
-            saveResult : function () {
+            saveResult : async function () {
                 // first check if that name already exists in the database or not
-                fetch('https://canarytype.azurewebsites.net/api/Student/CanaryNames', {
-                    method: 'GET'
-                }).then(
-                    response => response.json()
-                ).then(data => {
-                    for (let i = 0; i < data.length; i++){
-                        if (this.typerName === data[i]){
-                            let form = new FormData()
-                            form.append("Name", this.typerName)
-                            form.append("BestTypingSpeed", this.typingSpeed)
-                            fetch('https://canarytype.azurewebsites.net/api/Student/UpdateExistingCanary', {
-                                method: 'PUT',
-                                body: form
-                            }).then(() => {
-                                this.fetchResultFromDB()
-                                this.leaderboardFetched = true
-                            }
-                            )
+                // fetch('https://canarytype.azurewebsites.net/api/Student/CanaryNames', {
+                //     method: 'GET'
+                // }).then(
+                //     response => response.json()
+                // ).then(data => {
+                //     for (let i = 0; i < data.length; i++){
+                //         if (this.typerName === data[i]){
+                //             let form = new FormData()
+                //             form.append("Name", this.typerName)
+                //             form.append("BestTypingSpeed", this.typingSpeed)
+                //             fetch('https://canarytype.azurewebsites.net/api/Student/UpdateExistingCanary', {
+                //                 method: 'PUT',
+                //                 body: form
+                //             }).then(() => {
+                //                 this.fetchResultFromDB()
+                //                 this.leaderboardFetched = true
+                //             }
+                //             )
                             
-                            return
-                        }
-                    }
-                    // if this is a new typer, then we need to add the typer to the database
-                    let form = new FormData()
-                    form.append("Name", this.typerName)
-                    form.append("BestTypingSpeed", this.typingSpeed)
-                    fetch('https://canarytype.azurewebsites.net/api/Student/CreateNewTyper', {
-                        method: 'POST',
-                        body: form
-                    }).then(() => {
+                //             return
+                //         }
+                //     }
+                //     // if this is a new typer, then we need to add the typer to the database
+                //     let form = new FormData()
+                //     form.append("Name", this.typerName)
+                //     form.append("BestTypingSpeed", this.typingSpeed)
+                //     fetch('https://canarytype.azurewebsites.net/api/Student/CreateNewTyper', {
+                //         method: 'POST',
+                //         body: form
+                //     }).then(() => {
+                //         this.fetchResultFromDB()
+                //         this.leaderboardFetched = true
+                //     })
+                // })
+
+                // lets try to rerun the same code using async await
+                const canaryNames = await fetch('https://canarytype.azurewebsites.net/api/Student/CanaryNames', {
+                    method: 'GET'
+                })
+
+                for (let i = 0; i < canaryNames.length; i++){
+                    if (this.typerName === data[i]){
+                        let form = new FormData()
+                        form.append("Name", this.typerName)
+                        form.append("BestTypingSpeed", this.typingSpeed)
+                        await fetch('https://canarytype.azurewebsites.net/api/Student/UpdateExistingCanary', {
+                            method: 'PUT',
+                            body: form
+                        })
                         this.fetchResultFromDB()
                         this.leaderboardFetched = true
-                    })
+                        return
+                    }
+                }
+                let form = new FormData()
+                form.append("Name", this.typerName)
+                form.append("BestTypingSpeed", this.typingSpeed)
+                await fetch('https://canarytype.azurewebsites.net/api/Student/CreateNewTyper', {
+                    method: 'POST',
+                    body: form
                 })
+                this.fetchResultFromDB()
+                this.leaderboardFetched = true
+
             },
             tableRowTemplate: function (rank, name, bestTypingSpeed){
                 return `
