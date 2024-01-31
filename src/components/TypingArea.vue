@@ -57,53 +57,20 @@
 </template>
 
 <script>
+import { ref, onMounted } from 'vue'
     export default {
-        data () {
-            return {
-                typerName: '',
-                testText: 'Loading data... Please wait',
-                typingStarted: false,
-                time: 10,
-                typingFinished: false,
-                typingSpeed: 0,
-                leaderboardFetched: false
-            }
-        },
-        methods: {
-            startTimer: function(){
-                if (!this.typingStarted){
-                    this.typingStarted = true;
-                    const timer = setInterval(() => {
-                        if (this.time > 0){
-                            this.time--;
-                        }else{
-                            this.typingFinished = true
-                            this.calculateTypingSpeed();
-                            clearInterval(timer)
-                        }
-                    }, 1000);
-                }
-                this.addSpanAroundText()
-            },
-            addSpanAroundText: function (){
-                setTimeout(() => {
-                    const enteredText = document.querySelector('textarea').value;
+        setup(){
+            const typerName = ref('')
+            const testText = ref('Loading data... Please wait')
+            const typingStarted = ref(false)
+            const time = ref(10)
+            const typingFinished = ref(false)
+            const typingSpeed = ref(0)
+            const leaderboardFetched = ref(false)
 
-                    const resultDisplayElement = document.querySelector('.resultDisplay')
-                    resultDisplayElement.innerHTML = ''
-
-                    for (let i = 0; i < enteredText.length; i++){
-                        if (enteredText[i] == this.testText[i]){
-                            resultDisplayElement.innerHTML += `<span class="rightWord";">${enteredText[i]}</span>`
-                        }else{
-                            resultDisplayElement.innerHTML += `<span style="color: red;">${this.testText[i]}</span>`
-                        }
-                    }
-                }, 10);
-            },
-            calculateTypingSpeed: function() {
+            function calculateTypingSpeed() {
                 const wordsTyped = document.querySelector('textarea').value.split(' ')
-                const availablewords = this.testText.split(' ')
+                const availablewords = testText.value.split(' ')
 
                 let charsInTotalCorrectWords = 0;
 
@@ -116,24 +83,73 @@
                     }
                 }
 
-                this.typingSpeed = Math.round(((charsInTotalCorrectWords) / 5) * 6)
+                typingSpeed.value = Math.round(((charsInTotalCorrectWords) / 5) * 6)
                 document.querySelector('textarea').blur();
-            },
-            getStringToTypeFromBackend: function(){
+            }
+
+            function addSpanAroundText(){
+                setTimeout(() => {
+                    const enteredText = document.querySelector('textarea').value;
+
+                    const resultDisplayElement = document.querySelector('.resultDisplay')
+                    resultDisplayElement.innerHTML = ''
+
+                    for (let i = 0; i < enteredText.length; i++){
+                        if (enteredText[i] == testText.value[i]){
+                            resultDisplayElement.innerHTML += `<span class="rightWord";">${enteredText[i]}</span>`
+                        }else{
+                            resultDisplayElement.innerHTML += `<span style="color: red;">${testText.value[i]}</span>`
+                        }
+                    }
+                }, 10);
+            }
+
+            function startTimer(){
+                if (!typingStarted.value){
+                    typingStarted.value = true;
+                    const timer = setInterval(() => {
+                        if (time.value > 0){
+                            time.value--;
+                        }else{
+                            typingFinished.value = true
+                            calculateTypingSpeed();
+                            clearInterval(timer)
+                        }
+                    }, 1000);
+                }
+                addSpanAroundText()
+            }
+
+            function getStringToTypeFromBackend(){
                 // use locahost for if backend is not hosted
                 fetch("https://canarytype.azurewebsites.net/api/Student/RandomWords", {
                     method: 'GET'
                 }).then(response => 
                     response.json()
                 ).then(data => {
-                    this.testText = ''
+                    testText.value = ''
                     for (let i = 0; i < data.length - 2; i++){
-                        this.testText += data[i] += ' '
+                        testText.value += data[i] += ' '
                     }
-                    this.testText += data[data.length - 1]
+                    testText.value += data[data.length - 1]
                 })
-            },
-            saveResult : async function () {
+            }
+
+            function fetchResultFromDB() {
+                // fetch data from the backend
+                fetch('https://canarytype.azurewebsites.net/api/Student/Leaderboard', {
+                    method: 'GET'
+                }).then(response => response.json())
+                .then(backendData => {
+                    document.querySelector('tbody').innerHTML = ''
+
+                    for (let i = 0; i < backendData.length; i++){
+                        document.querySelector('tbody').innerHTML += tableRowTemplate(i + 1, backendData[i].name, backendData[i].bestTypingSpeed)
+                    }
+                })
+            }
+
+                async function saveResult () {
                 // first check if that name already exists in the database or not
                 // fetch('https://canarytype.azurewebsites.net/api/Student/CanaryNames', {
                 //     method: 'GET'
@@ -177,31 +193,31 @@
                 })
 
                 for (let i = 0; i < canaryNames.length; i++){
-                    if (this.typerName === canaryNames[i]){
+                    if (typerName.value === canaryNames[i]){
                         let form = new FormData()
-                        form.append("Name", this.typerName)
-                        form.append("BestTypingSpeed", this.typingSpeed)
+                        form.append("Name", typerName.value)
+                        form.append("BestTypingSpeed", typingSpeed.value)
                         await fetch('https://canarytype.azurewebsites.net/api/Student/UpdateExistingCanary', {
                             method: 'PUT',
                             body: form
                         })
-                        this.fetchResultFromDB()
-                        this.leaderboardFetched = true
+                        fetchResultFromDB()
+                        leaderboardFetched.value = true
                         return
                     }
                 }
                 let form = new FormData()
-                form.append("Name", this.typerName)
-                form.append("BestTypingSpeed", this.typingSpeed)
+                form.append("Name", typerName.value)
+                form.append("BestTypingSpeed", typingSpeed.value)
                 await fetch('https://canarytype.azurewebsites.net/api/Student/CreateNewTyper', {
                     method: 'POST',
                     body: form
                 })
-                this.fetchResultFromDB()
-                this.leaderboardFetched = true
+                fetchResultFromDB()
+                leaderboardFetched.value = true
+            }
 
-            },
-            tableRowTemplate: function (rank, name, bestTypingSpeed){
+            function tableRowTemplate(rank, name, bestTypingSpeed){
                 return `
                     <tr>
                         <td>
@@ -216,25 +232,205 @@
                     </tr>
                 `
             }
-            ,
-            fetchResultFromDB: function() {
-                // fetch data from the backend
-                fetch('https://canarytype.azurewebsites.net/api/Student/Leaderboard', {
-                    method: 'GET'
-                }).then(response => response.json())
-                .then(backendData => {
-                    document.querySelector('tbody').innerHTML = ''
 
-                    for (let i = 0; i < backendData.length; i++){
-                        document.querySelector('tbody').innerHTML += this.tableRowTemplate(i + 1, backendData[i].name, backendData[i].bestTypingSpeed)
-                    }
-                })
+            onMounted(function () {
+                getStringToTypeFromBackend();
+                fetchResultFromDB()
+            })
+
+            return {
+                typerName : typerName, 
+                testText: testText, 
+                typingStarted : typingStarted, 
+                time : time, 
+                typingFinished : typingFinished, 
+                typingSpeed : typingSpeed, 
+                leaderboardFetched : leaderboardFetched,
+                calculateTypingSpeed : calculateTypingSpeed,
+                addSpanAroundText : addSpanAroundText,
+                startTimer : startTimer,
+                getStringToTypeFromBackend,
+                fetchResultFromDB,
+                saveResult
             }
         },
-        mounted: function(){
-            this.getStringToTypeFromBackend();
-            this.fetchResultFromDB()
-        }
+        // data () {
+        //     return {
+        //         typerName: '',
+        //         testText: 'Loading data... Please wait',
+        //         typingStarted: false,
+        //         time: 10,
+        //         typingFinished: false,
+        //         typingSpeed: 0,
+        //         leaderboardFetched: false
+        //     }
+        // },
+        // methods: {
+        //     startTimer: function(){
+        //         if (!this.typingStarted){
+        //             this.typingStarted = true;
+        //             const timer = setInterval(() => {
+        //                 if (this.time > 0){
+        //                     this.time--;
+        //                 }else{
+        //                     this.typingFinished = true
+        //                     this.calculateTypingSpeed();
+        //                     clearInterval(timer)
+        //                 }
+        //             }, 1000);
+        //         }
+        //         this.addSpanAroundText()
+        //     },
+        //     addSpanAroundText: function (){
+        //         setTimeout(() => {
+        //             const enteredText = document.querySelector('textarea').value;
+
+        //             const resultDisplayElement = document.querySelector('.resultDisplay')
+        //             resultDisplayElement.innerHTML = ''
+
+        //             for (let i = 0; i < enteredText.length; i++){
+        //                 if (enteredText[i] == this.testText[i]){
+        //                     resultDisplayElement.innerHTML += `<span class="rightWord";">${enteredText[i]}</span>`
+        //                 }else{
+        //                     resultDisplayElement.innerHTML += `<span style="color: red;">${this.testText[i]}</span>`
+        //                 }
+        //             }
+        //         }, 10);
+        //     },
+        //     calculateTypingSpeed: function() {
+        //         const wordsTyped = document.querySelector('textarea').value.split(' ')
+        //         const availablewords = this.testText.split(' ')
+
+        //         let charsInTotalCorrectWords = 0;
+
+        //         for (let word of wordsTyped){
+        //             for (let word2 of availablewords){
+        //                 if (word === word2){
+        //                     charsInTotalCorrectWords += word.length;
+        //                     break
+        //                 }
+        //             }
+        //         }
+
+        //         this.typingSpeed = Math.round(((charsInTotalCorrectWords) / 5) * 6)
+        //         document.querySelector('textarea').blur();
+        //     },
+        //     getStringToTypeFromBackend: function(){
+        //         // use locahost for if backend is not hosted
+        //         fetch("https://canarytype.azurewebsites.net/api/Student/RandomWords", {
+        //             method: 'GET'
+        //         }).then(response => 
+        //             response.json()
+        //         ).then(data => {
+        //             this.testText = ''
+        //             for (let i = 0; i < data.length - 2; i++){
+        //                 this.testText += data[i] += ' '
+        //             }
+        //             this.testText += data[data.length - 1]
+        //         })
+        //     },
+        //     saveResult : async function () {
+        //         // first check if that name already exists in the database or not
+        //         // fetch('https://canarytype.azurewebsites.net/api/Student/CanaryNames', {
+        //         //     method: 'GET'
+        //         // }).then(
+        //         //     response => response.json()
+        //         // ).then(data => {
+        //         //     for (let i = 0; i < data.length; i++){
+        //         //         if (this.typerName === data[i]){
+        //         //             let form = new FormData()
+        //         //             form.append("Name", this.typerName)
+        //         //             form.append("BestTypingSpeed", this.typingSpeed)
+        //         //             fetch('https://canarytype.azurewebsites.net/api/Student/UpdateExistingCanary', {
+        //         //                 method: 'PUT',
+        //         //                 body: form
+        //         //             }).then(() => {
+        //         //                 this.fetchResultFromDB()
+        //         //                 this.leaderboardFetched = true
+        //         //             }
+        //         //             )
+                            
+        //         //             return
+        //         //         }
+        //         //     }
+        //         //     // if this is a new typer, then we need to add the typer to the database
+        //         //     let form = new FormData()
+        //         //     form.append("Name", this.typerName)
+        //         //     form.append("BestTypingSpeed", this.typingSpeed)
+        //         //     fetch('https://canarytype.azurewebsites.net/api/Student/CreateNewTyper', {
+        //         //         method: 'POST',
+        //         //         body: form
+        //         //     }).then(() => {
+        //         //         this.fetchResultFromDB()
+        //         //         this.leaderboardFetched = true
+        //         //     })
+        //         // })
+
+        //         // lets try to rerun the same code using async await
+
+        //         const canaryNames = await fetch('https://canarytype.azurewebsites.net/api/Student/CanaryNames', {
+        //             method: 'GET'
+        //         })
+
+        //         for (let i = 0; i < canaryNames.length; i++){
+        //             if (this.typerName === canaryNames[i]){
+        //                 let form = new FormData()
+        //                 form.append("Name", this.typerName)
+        //                 form.append("BestTypingSpeed", this.typingSpeed)
+        //                 await fetch('https://canarytype.azurewebsites.net/api/Student/UpdateExistingCanary', {
+        //                     method: 'PUT',
+        //                     body: form
+        //                 })
+        //                 this.fetchResultFromDB()
+        //                 this.leaderboardFetched = true
+        //                 return
+        //             }
+        //         }
+        //         let form = new FormData()
+        //         form.append("Name", this.typerName)
+        //         form.append("BestTypingSpeed", this.typingSpeed)
+        //         await fetch('https://canarytype.azurewebsites.net/api/Student/CreateNewTyper', {
+        //             method: 'POST',
+        //             body: form
+        //         })
+        //         this.fetchResultFromDB()
+        //         this.leaderboardFetched = true
+
+        //     },
+        //     tableRowTemplate: function (rank, name, bestTypingSpeed){
+        //         return `
+        //             <tr>
+        //                 <td>
+        //                     ${rank}
+        //                 </td>
+        //                 <td>
+        //                     ${name}
+        //                 </td>
+        //                 <td>
+        //                     ${bestTypingSpeed}
+        //                 </td>
+        //             </tr>
+        //         `
+        //     }
+        //     ,
+        //     fetchResultFromDB: function() {
+        //         // fetch data from the backend
+        //         fetch('https://canarytype.azurewebsites.net/api/Student/Leaderboard', {
+        //             method: 'GET'
+        //         }).then(response => response.json())
+        //         .then(backendData => {
+        //             document.querySelector('tbody').innerHTML = ''
+
+        //             for (let i = 0; i < backendData.length; i++){
+        //                 document.querySelector('tbody').innerHTML += this.tableRowTemplate(i + 1, backendData[i].name, backendData[i].bestTypingSpeed)
+        //             }
+        //         })
+        //     }
+        // },
+        // mounted: function(){
+        //     this.getStringToTypeFromBackend();
+        //     this.fetchResultFromDB()
+        // }
     }
 </script>
 
