@@ -171,6 +171,7 @@
                 // })
 
                 // lets try to rerun the same code using async await
+
                 const canaryNames = await fetch('https://canarytype.azurewebsites.net/api/Student/CanaryNames', {
                     method: 'GET'
                 })
